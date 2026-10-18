@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field_error, invalid %}
+{% block title %}Budgets{% endblock %}
+{% block content %}
+<h1 class="page-title">Monthly budgets</h1>
+<p class="lede">Set how much you plan to spend in each category every month. Leave a field empty for no limit.</p>
+
+<form method="post" action="{{ url_for('main.save_budgets') }}" class="panel" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="table-wrap">
+    <table class="ledger budgets-table">
+      <thead>
+        <tr><th scope="col">Category</th><th scope="col" class="num">Spent in {{ month.strftime('%B') }}</th><th scope="col">Monthly budget</th></tr>
+      </thead>
+      <tbody>
+        {% for c in expense_categories %}
+          {% set key = 'budget_' ~ c.id %}
+          <tr>
+            <th scope="row"><label for="{{ key }}">{{ c.name }}</label></th>
+            <td class="num">{{ spent.get(c.id, 0)|money }}</td>
+            <td>
+              <div class="amount-input">
+                <span aria-hidden="true">$</span>
+                <input type="text" inputmode="decimal" id="{{ key }}" name="{{ key }}" value="{{ budget_form.get(key, '') }}" placeholder="No limit" {{ invalid(budget_errors, key) }}>
+              </div>
+              {{ field_error(budget_errors, key) }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <button type="submit" class="button">Save budgets</button>
+</form>
+
+<div class="two-col">
+  <section class="panel" aria-labelledby="new-category-heading">
+    <h2 id="new-category-heading">Add a category</h2>
+    <form method="post" action="{{ url_for('main.create_category') }}" class="stack" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" maxlength="40" value="{{ category_form.get('name', '') }}" placeholder="Pet care" required {{ invalid(category_errors, 'name') }}>
+      {{ field_error(category_errors, 'name') }}
+      <fieldset class="choice">
+        <legend>Type</legend>
+        <label><input type="radio" name="kind" value="expense" {% if category_form.get('kind') != 'income' %}checked{% endif %}> Money out</label>
+        <label><input type="radio" name="kind" value="income" {% if category_form.get('kind') == 'income' %}checked{% endif %}> Money in</label>
+      </fieldset>
+      {{ field_error(category_errors, 'kind') }}
+      <button type="submit" class="button button-quiet">Add category</button>
+    </form>
+  </section>
+
+  <section class="panel" aria-labelledby="income-heading">
+    <h2 id="income-heading">Income categories</h2>
+    <ul class="plain-list">
+      {% for c in income_categories %}<li>{{ c.name }}</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

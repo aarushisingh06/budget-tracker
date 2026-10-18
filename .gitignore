@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Local database and Flask instance folder (your personal data stays out of git)
+instance/
+*.sqlite
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store

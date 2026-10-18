@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Import and export{% endblock %}
+{% block content %}
+<h1 class="page-title">Import and export</h1>
+
+<div class="two-col">
+  <section class="panel" aria-labelledby="export-heading">
+    <h2 id="export-heading">Download your data</h2>
+    <p>Get a CSV file you can open in Excel, Numbers, or Google Sheets.</p>
+    <p class="button-row">
+      <a class="button" href="{{ url_for('main.export_transactions', month=month_key) }}">Download {{ month.strftime('%B') }}</a>
+      <a class="button button-quiet" href="{{ url_for('main.export_transactions') }}">Download everything</a>
+    </p>
+  </section>
+
+  <section class="panel" aria-labelledby="import-heading">
+    <h2 id="import-heading">Import transactions</h2>
+    <p>Upload a CSV with these four columns. Amounts are positive; the category decides whether it counts as money in or out.</p>
+    <pre class="sample">date,description,category,amount
+2026-10-01,October rent,Rent,1450.00
+2026-10-03,Paycheck,Salary,2100.00</pre>
+    <p class="hint">If any row has a problem, nothing is imported, so you won’t end up with half a file.</p>
+
+    {% if import_errors %}
+      <div class="error-box" role="alert">
+        <p><strong>Nothing was imported.</strong> Fix these rows and upload the file again:</p>
+        <ul>
+          {% for message in import_errors[:15] %}<li>{{ message }}</li>{% endfor %}
+        </ul>
+        {% if import_errors|length > 15 %}<p>…and {{ import_errors|length - 15 }} more.</p>{% endif %}
+      </div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('main.import_transactions') }}" enctype="multipart/form-data" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="file">CSV file</label>
+      <input type="file" id="file" name="file" accept=".csv,text/csv" required>
+      <button type="submit" class="button">Import file</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

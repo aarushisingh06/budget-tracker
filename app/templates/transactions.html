@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_macros.html" import month_nav, signed_amount %}
+{% block title %}Transactions{% endblock %}
+{% block content %}
+{{ month_nav('main.transactions', month, prev_key, next_key, is_current_month) }}
+
+<form method="get" class="filter-bar">
+  <input type="hidden" name="month" value="{{ month_key }}">
+  <label for="category">Category</label>
+  <select id="category" name="category">
+    <option value="">All categories</option>
+    {% for c in categories %}
+      <option value="{{ c.id }}" {% if selected_category == c.id %}selected{% endif %}>{{ c.name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="button button-quiet">Filter</button>
+  <a class="export-link" href="{{ url_for('main.export_transactions', month=month_key) }}">Download this month as CSV</a>
+</form>
+
+{% if rows %}
+  <div class="table-wrap">
+    <table class="ledger">
+      <thead>
+        <tr><th scope="col">Date</th><th scope="col">Description</th><th scope="col">Category</th><th scope="col" class="num">Amount</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+      </thead>
+      <tbody>
+        {% for t in rows %}
+          <tr>
+            <td class="nowrap">{{ t.occurred_on }}</td>
+            <td>{{ t.description }}</td>
+            <td>{{ t.category }}</td>
+            <td class="num">{{ signed_amount(t) }}</td>
+            <td>
+              <div class="actions">
+              <a href="{{ url_for('main.edit_transaction', transaction_id=t.id) }}">Edit</a>
+              <form method="post" action="{{ url_for('main.delete_transaction', transaction_id=t.id) }}" data-confirm="Delete “{{ t.description }}”? This can’t be undone.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="link-button">Delete</button>
+              </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr><th scope="row" colspan="3">Money in</th><td class="num amount-income">{{ income|money }}</td><td></td></tr>
+        <tr><th scope="row" colspan="3">Money out</th><td class="num amount-expense">{{ spent|money }}</td><td></td></tr>
+      </tfoot>
+    </table>
+  </div>
+{% else %}
+  <p class="empty">No transactions match. <a href="{{ url_for('main.overview', month=month_key) }}">Add one from the overview</a> or <a href="{{ url_for('main.data') }}">import a CSV</a>.</p>
+{% endif %}
+{% endblock %}

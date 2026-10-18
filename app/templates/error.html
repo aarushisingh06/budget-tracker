@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h1 class="page-title">{{ title }}</h1>
+<p class="lede">{{ message }}</p>
+<p><a class="button" href="{{ url_for('main.overview') }}">Go to overview</a></p>
+{% endblock %}

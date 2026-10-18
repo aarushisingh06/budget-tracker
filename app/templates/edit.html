@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_macros.html" import transaction_fields %}
+{% block title %}Edit transaction{% endblock %}
+{% block content %}
+<p class="back"><a href="{{ url_for('main.transactions', month=back_month) }}">‹ Back to transactions</a></p>
+<h1 class="page-title">Edit transaction</h1>
+
+<div class="panel narrow">
+  <form method="post" class="stack" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {{ transaction_fields(form, errors, categories) }}
+    <button type="submit" class="button">Save changes</button>
+  </form>
+</div>
+
+<form method="post" action="{{ url_for('main.delete_transaction', transaction_id=transaction.id) }}" class="danger-zone" data-confirm="Delete this transaction? This can’t be undone.">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="button button-danger">Delete transaction</button>
+</form>
+{% endblock %}

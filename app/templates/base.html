@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} – Budget Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@500;700;900&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('main.overview') }}">Budget Tracker</a>
+    <nav aria-label="Main">
+      {% set endpoint = request.endpoint %}
+      <a href="{{ url_for('main.overview') }}" {% if endpoint == 'main.overview' %}aria-current="page"{% endif %}>Overview</a>
+      <a href="{{ url_for('main.transactions') }}" {% if endpoint in ('main.transactions', 'main.edit_transaction') %}aria-current="page"{% endif %}>Transactions</a>
+      <a href="{{ url_for('main.budgets') }}" {% if endpoint == 'main.budgets' %}aria-current="page"{% endif %}>Budgets</a>
+      <a href="{{ url_for('main.data') }}" {% if endpoint == 'main.data' %}aria-current="page"{% endif %}>Import and export</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for kind, message in messages %}
+        <p class="flash flash-{{ kind }}" role="status">{{ message }}</p>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% from "_macros.html" import month_nav, transaction_fields, signed_amount %}
+{% block title %}{{ month.strftime('%B %Y') }}{% endblock %}
+{% block content %}
+{{ month_nav('main.overview', month, prev_key, next_key, is_current_month) }}
+
+<section class="net" aria-label="Month summary">
+  <p class="net-figure {{ 'is-negative' if summary.net < 0 else 'is-positive' }}">
+    {% if summary.net < 0 %}{{ (-summary.net)|money }}{% else %}{{ summary.net|money }}{% endif %}
+  </p>
+  <p class="net-caption">
+    {% if summary.income == 0 and summary.expenses == 0 %}
+      Nothing recorded for this month yet.
+    {% elif summary.net < 0 %}
+      more went out than came in.
+    {% else %}
+      left over after spending.
+    {% endif %}
+  </p>
+  <dl class="flow">
+    <div><dt>Money in</dt><dd class="amount-income">{{ summary.income|money }}</dd></div>
+    <div><dt>Money out</dt><dd class="amount-expense">{{ summary.expenses|money }}</dd></div>
+    {% if summary.budgeted %}<div><dt>Budgeted</dt><dd>{{ summary.budgeted|money }}</dd></div>{% endif %}
+  </dl>
+</section>
+
+<div class="overview-grid">
+  <div class="overview-main">
+    <section aria-labelledby="envelopes-heading">
+      <h2 id="envelopes-heading">Spending by category</h2>
+      {% if summary.categories %}
+        <ul class="envelopes">
+          {% for c in summary.categories %}
+            <li class="envelope {{ 'is-over' if c.over_budget }} {{ 'no-budget' if c.budget is none }}">
+              <div class="envelope-head">
+                <span class="envelope-name">{{ c.name }}</span>
+                <span class="envelope-spent">{{ c.spent|money }}</span>
+              </div>
+              <div class="track"><div class="fill w-{{ ((c.percent_used / 5)|round|int) * 5 }}"></div></div>
+              <p class="envelope-note">
+                {% if c.budget is none %}No budget set
+                {% elif c.over_budget %}{{ (-c.remaining)|money }} over a {{ c.budget|money }} budget
+                {% elif c.remaining == 0 %}All of the {{ c.budget|money }} budget used
+                {% else %}{{ c.remaining|money }} left of {{ c.budget|money }}{% endif %}
+              </p>
+            </li>
+          {% endfor %}
+        </ul>
+        <p class="hint"><a href="{{ url_for('main.budgets') }}">Set monthly budgets</a> to see how much is left in each category.</p>
+      {% else %}
+        <p class="empty">No spending this month. Add a transaction to see where your money goes.</p>
+      {% endif %}
+    </section>
+
+    <section aria-labelledby="recent-heading">
+      <div class="section-head">
+        <h2 id="recent-heading">Recent transactions</h2>
+        {% if recent %}<a href="{{ url_for('main.transactions', month=month_key) }}">See all</a>{% endif %}
+      </div>
+      {% if recent %}
+        <ul class="recent">
+          {% for t in recent %}
+            <li>
+              <span class="recent-date">{{ t.occurred_on[5:] | replace('-', '/') }}</span>
+              <span class="recent-desc">{{ t.description }}<span class="recent-cat">{{ t.category }}</span></span>
+              {{ signed_amount(t) }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">No transactions yet for {{ month.strftime('%B') }}.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <aside class="panel" aria-labelledby="add-heading">
+    <h2 id="add-heading">Add a transaction</h2>
+    <form method="post" action="{{ url_for('main.create_transaction') }}" class="stack" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="month" value="{{ month_key }}">
+      {{ transaction_fields(form, errors, categories) }}
+      <button type="submit" class="button">Add transaction</button>
+    </form>
+  </aside>
+</div>
+{% endblock %}

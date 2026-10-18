@@ -1,0 +1,50 @@
+{% macro field_error(errors, name) -%}
+  {% if errors.get(name) %}<p class="field-error" id="{{ name }}-error">{{ errors[name] }}</p>{% endif %}
+{%- endmacro %}
+
+{% macro invalid(errors, name) -%}
+  {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}
+{%- endmacro %}
+
+{% macro month_nav(endpoint, month, prev_key, next_key, is_current_month) -%}
+  <div class="month-nav">
+    <a class="month-step" href="{{ url_for(endpoint, month=prev_key) }}" aria-label="Previous month">‹</a>
+    <h1>{{ month.strftime('%B') }} <span class="year">{{ month.year }}</span></h1>
+    <a class="month-step" href="{{ url_for(endpoint, month=next_key) }}" aria-label="Next month">›</a>
+    {% if not is_current_month %}<a class="today-link" href="{{ url_for(endpoint) }}">Back to this month</a>{% endif %}
+  </div>
+{%- endmacro %}
+
+{% macro transaction_fields(form, errors, categories) -%}
+  <label for="occurred_on">Date</label>
+  <input type="date" id="occurred_on" name="occurred_on" value="{{ form.get('occurred_on', '') }}" required {{ invalid(errors, 'occurred_on') }}>
+  {{ field_error(errors, 'occurred_on') }}
+
+  <label for="description">Description</label>
+  <input type="text" id="description" name="description" maxlength="120" placeholder="Weekly groceries" value="{{ form.get('description', '') }}" required {{ invalid(errors, 'description') }}>
+  {{ field_error(errors, 'description') }}
+
+  <label for="amount">Amount</label>
+  <div class="amount-input">
+    <span aria-hidden="true">$</span>
+    <input type="text" inputmode="decimal" id="amount" name="amount" placeholder="0.00" value="{{ form.get('amount', '') }}" required {{ invalid(errors, 'amount') }}>
+  </div>
+  {{ field_error(errors, 'amount') }}
+
+  <label for="category_id">Category</label>
+  <select id="category_id" name="category_id" required {{ invalid(errors, 'category_id') }}>
+    <option value="">Choose a category</option>
+    {% for group, label in [('income', 'Money in'), ('expense', 'Money out')] %}
+      <optgroup label="{{ label }}">
+        {% for c in categories if c.kind == group %}
+          <option value="{{ c.id }}" {% if form.get('category_id') == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </optgroup>
+    {% endfor %}
+  </select>
+  {{ field_error(errors, 'category_id') }}
+{%- endmacro %}
+
+{% macro signed_amount(row) -%}
+  <span class="amount amount-{{ row.kind }}">{{ '+' if row.kind == 'income' else '−' }}{{ row.amount_cents|money }}</span>
+{%- endmacro %}
